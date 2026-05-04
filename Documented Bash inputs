@@ -1,0 +1,95 @@
+#### This is an overview of the Bash commands used on Euler. 
+#### They are mostly in chronological order, but not exclusively, as this was also used as a reference guide.
+
+############ add this to all .sh files
+#SBATCH --mail-type=end
+#SBATCH --mail-user=rouvenh@student.ethz.ch
+############
+
+r
+##Get into Scratch directory
+rouvenh@eu-login-27:~$ cd $SCRATCH
+rouvenh@eu-login-27:/cluster/scratch/rouvenh$ mkdir 01_Data
+rouvenh@eu-login-27:~$ cd $SCRATCH/01_Data/
+
+#### upload .tar files
+
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ for file in *.tar; do
+  echo "Contents of $file:" >> tar_contents.txt
+  tar -tvf "$file" >> tar_contents.txt
+  echo "" >> tar_contents.txt
+done
+
+## open the tar_contense file
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ less tar_contents.txt
+
+## make new directory
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ mkdir 02_extracted_reads
+
+## dos2unix: converting file submit.extract_reads.slurm.sh to Unix format...
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ dos2unix submit.extract_reads.slurm.sh
+## making changes to the file
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ nano submit.extract_reads.slurm.sh
+
+###### contents of submit.extract_reads.slurm.sh :
+#!/bin/bash
+#SBATCH --job-name=extract_reads
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time=4:00:00
+#SBATCH --mail-type=end
+#SBATCH --mail-user=rouvenh@student.ethz.ch
+#SBATCH --output extract_reads.log
+
+# Extract only paired-end FASTQ files
+find *tar | parallel -j 5 'tar -xf {} --wildcards --no-anchored --strip-components=3 "*_1.fq.gz" "*_2.fq.gz"'
+######
+
+## submit job
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ sbatch < submit.extract_reads.slurm.sh
+Submitted batch job 65363555
+## get info on the Job
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ myjobs
+
+##Trying to use conda and setup
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ cd $HOME
+rouvenh@eu-login-27:~$ conda
+-bash: conda: command not found
+## setup conda
+rouvenh@eu-login-27:~$ curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+rouvenh@eu-login-27:~$ bash Miniforge3-$(uname)-$(uname -m).sh
+rouvenh@eu-login-27:~$ source ~/miniforge3/etc/profile.d/conda.sh
+
+## start conda environment
+rouvenh@eu-login-27:~$ conda
+rouvenh@eu-login-27:~$ conda -h
+rouvenh@eu-login-27:~$ conda create -n demultiplex
+rouvenh@eu-login-27:~$ conda activate demultiplex
+(demultiplex) rouvenh@eu-login-27:~$ conda install bioconda::stacks
+(demultiplex) rouvenh@eu-login-27:~$ conda deactivate 
+
+
+rouvenh@eu-login-27:~$ mkdir $SCRATCH/01_Data/03_demultiplex
+rouvenh@eu-login-27:~$ mkdir $SCRATCH/01_Data/03_demultiplex/logs
+rouvenh@eu-login-27:~$ cd $SCRATCH/01_Data/02_extracted_reads/
+#### Insert files by dragging
+##change files to the right format
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/02_extracted_reads$ dos2unix *txt
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/02_extracted_reads$ dos2unix *sh
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/02_extracted_reads$ cd ../03_demultiplex/
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/03_demultiplex$ mkdir R9589
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/03_demultiplex$ mkdir R9385
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/03_demultiplex$ mkdir R9182
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/03_demultiplex$ mkdir R9582
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/03_demultiplex$ mkdir R9585
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/03_demultiplex$ mkdir R9389
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ less 02_extracted_reads/R9589.txt
+
+
+
+
+
+### add this
+#SBATCH --mail-type=end
+#SBATCH --mail-user=rouvenh@student.ethz.ch

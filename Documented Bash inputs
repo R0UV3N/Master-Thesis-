@@ -6,7 +6,7 @@
 #SBATCH --mail-user=rouvenh@student.ethz.ch
 ############
 
-r
+
 ##Get into Scratch directory
 rouvenh@eu-login-27:~$ cd $SCRATCH
 rouvenh@eu-login-27:/cluster/scratch/rouvenh$ mkdir 01_Data

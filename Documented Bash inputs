@@ -16,7 +16,8 @@ GNU Parallel 20210822
 
 ##Upload data from p-drive
 1. on mpb11-139 go to the folder on p-drive containing the .tar files )
-2. scp -r *tar rouvenh@euler.ethz.ch:/cluster/scratch/rouvenh/01_Data/
+[rouvenh@mpb11-139 public]$ scp -r *tar rouvenh@euler.ethz.ch:/cluster/scratch/rouvenh/01_Data/
+[rouvenh@mpb11-139 public]$ scp Damian_Kach/01_Data/01_Sequencing/kyuss.nextdenovo.juicer.fasta rouvenh@euler.ethz.ch:/cluster/scratch/rouvenh/01_Data/
 
 ##Get into Scratch directory
 rouvenh@eu-login-27:~$ cd $SCRATCH

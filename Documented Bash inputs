@@ -111,11 +111,11 @@ rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/02_extracted_reads$ conda a
 #SBATCH --mem-per-cpu=2G
 #SBATCH --time=23:00:00
 #SBATCH --array=1-6
-#SBATCH --mail-type=end
+#SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=rouvenh@student.ethz.ch
 #SBATCH --output=/cluster/scratch/rouvenh/01_Data/03_demultiplex/logs/%x_%A_%a.log
 
-sublib=$(sed -n "$(SLURM_ARRAY_TASK_ID)p" SubLibs.txt)
+sublib=$(sed -n "${SLURM_ARRAY_TASK_ID}p" SubLibs.txt)
 
 barcode="${sublib}.txt"
 R1=$(ls ${sublib}*_1.fq.gz)

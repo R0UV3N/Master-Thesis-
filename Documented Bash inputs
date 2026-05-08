@@ -160,7 +160,6 @@ process_radtags \
 ## making sure the .sh file is in the right format and start to trimm adapters
 (mapping) rouvenh@eu-login-01:/cluster/scratch/rouvenh/02_Results/01_mapped_reads$ dos2unix submit.adaptor.slurm.sh
 (mapping) rouvenh@eu-login-01:/cluster/scratch/rouvenh/02_Results/01_mapped_reads$ sbatch < submit.adaptor.slurm.sh
-Submitted batch job 65703038
 ############################################ contents of submit.adaptor.slurm.sh
 #!/bin/bash
 #SBATCH -n 1
@@ -199,12 +198,57 @@ hts_LengthFilter -m 36 -L /dev/null \
 (mapping) rouvenh@eu-login-01:/cluster/scratch/rouvenh/02_Results/01_mapped_reads$ samtools faidx /cluster/scratch/rouvenh/01_Data/kyuss.nextdenovo.juicer.fasta
 (mapping) rouvenh@eu-login-01:/cluster/scratch/rouvenh/02_Results/01_mapped_reads$ samtools faidx /cluster/scratch/rouvenh/01_Data/HEN17_h1_yutang.fasta
 
+## Generate txt file with all files relevant for further processing (only R1); order by decreasing size (to optimise parallelisation on cluster)
+## Order by adapter trimming output
 (mapping) rouvenh@eu-login-01:/cluster/scratch/rouvenh/02_Results$ mkdir 02_mapped_reads_bowtie
 (mapping) rouvenh@eu-login-01:/cluster/scratch/rouvenh/02_Results/01_mapped_reads/logs$ grep -m 1 basepairs_out *log | awk -F': *"basepairs_out": *' '{print $1, $2}' | sort -k2,2nr > /cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie/sorted_basepairs.txt
 (mapping) rouvenh@eu-login-01:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ awk '{split($1,a,"_"); print "/cluster/scratch/rouvenh/02_Results/01_mapped_reads/" a[1]"/"a[2]"_"a[3]"_"a[4]"_clean_R1.fastq.gz"}' sorted_basepairs.txt > mapping_sorted.txt
 
+## Sort by species
+(mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ grep "Lp" mapping_sorted.txt > mapping_sorted_Lp.txt
+(mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ grep "Tp" mapping_sorted.txt > mapping_sorted_Tp.txt
 
+####Add scripts to directory
+(mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix *.slurm.sh
+(mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.mapping_bowtie2_Lp.slurm.sh
+(mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.mapping_bowtie2_Tp.slurm.sh
+############################################ contents of submit.mapping_bowtie2_Lp.slurm.sh
+#!/bin/bash
+#SBATCH -n 1
+#SBATCH --cpus-per-task=1
+#SBATCH --time=120:00:00
+#SBATCH --mem-per-cpu=4096
+#SBATCH --job-name="Mapping_Lp"
+#SBATCH --output="runMapping_Lp_%A.log"
+#SBATCH --error="runMapping_Lp_%A.log"
+#SBATCH --open-mode=append
+#SBATCH --array=1-113 ##(1-101 for Tp)
+#SBATCH --tmp=100G
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=rouvenh@student.ethz.ch
 
+R1=$(sed -n "${SLURM_ARRAY_TASK_ID}p" mapping_sorted_Lp.txt)
+R2=$(echo ${R1} | sed "s/1.fastq.gz/2.fastq.gz/")
+sample=$(echo ${R1} | cut -d '/' -f 8 | cut -d '_' -f 1-3)
+outdir=$(echo ${R1} | cut -d '/' -f 7)
+mkdir -p "$outdir"
+mkdir -p logs
+
+refseq=/cluster/scratch/rouvenh/01_Data/kyuss.nextdenovo.juicer.fasta
+
+# Map the reads to the reference and sort the BAM file
+# ${TMPDIR} is the directory created by Slurm to store temporary files.
+# See: https://scicomp.ethz.ch/wiki/Using_the_batch_system#Scratch_space
+bowtie2 --rg-id ${outdir}_${sample} --rg SM:${outdir}_${sample} --rg PL:ILLUMINA \
+  -I 0 -X 1200 -x ${refseq} -p 1 -t \
+  -1 ${R1} -2 ${R2} \
+  2> logs/${outdir}_${sample}_bowtie2.log | \
+samtools sort -T ${TMPDIR}/${outdir}_${sample} --write-index -l 6 -@ 1 \
+  -o ${outdir}/${outdir}_${sample}_bowtie2_sorted.bam \
+  > logs/${outdir}_${sample}_bowtie2_sort.log 2>&1
+
+myjobs -j `squeue --format='%A %i' | grep ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID} | cut -f1 -d ' '`
+############################################
 
 
 

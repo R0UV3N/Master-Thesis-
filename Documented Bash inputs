@@ -42,6 +42,8 @@ rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ dos2unix submit.extract_re
 ## making changes to the file
 rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ nano submit.extract_reads.slurm.sh
 
+## submit job
+rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ sbatch < submit.extract_reads.slurm.sh
 #################################################### contents of submit.extract_reads.slurm.sh :
 #!/bin/bash
 #SBATCH --job-name=extract_reads
@@ -57,9 +59,6 @@ rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ nano submit.extract_reads.
 find *tar | parallel -j 5 'tar -xf {} --wildcards --no-anchored --strip-components=3 "*_1.fq.gz" "*_2.fq.gz"'
 ####################################################
 
-## submit job
-rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ sbatch < submit.extract_reads.slurm.sh
-Submitted batch job 65363555
 ## get info on the Job
 rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ myjobs
 
@@ -98,11 +97,10 @@ rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/03_demultiplex$ mkdir R9389
 
 ## move the fq.gz files from 01_Data into 02_extracted_reads
 rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/02_extracted_reads$ mv ../*fq.gz 
+
 ## activate conda environment an start the job
 rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/02_extracted_reads$ conda activate demultiplex
 (demultiplex) rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data/02_extracted_reads$ sbatch < submit.process_radtags.slurm.sh
-  Submitted batch job 65434193
-
 ######################################### contents of submit.process_radtags.slurm.sh (process_radtags 2.68)
 #!/bin/bash
 #SBATCH --job-name=extract_reads
@@ -218,23 +216,23 @@ hts_LengthFilter -m 36 -L /dev/null \
 #SBATCH --cpus-per-task=1
 #SBATCH --time=120:00:00
 #SBATCH --mem-per-cpu=4096
-#SBATCH --job-name="Mapping_Lp"
-#SBATCH --output="runMapping_Lp_%A.log"
-#SBATCH --error="runMapping_Lp_%A.log"
+#SBATCH --job-name="Mapping_Lp"                                                    ## change name
+#SBATCH --output="runMapping_Lp_%A.log"                                            ## change name
+#SBATCH --error="runMapping_Lp_%A.log"                                             ## change name
 #SBATCH --open-mode=append
-#SBATCH --array=1-113 ##(1-101 for Tp)
+#SBATCH --array=1-113                                                              ## (1-101 for Tp)
 #SBATCH --tmp=100G
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=rouvenh@student.ethz.ch
 
-R1=$(sed -n "${SLURM_ARRAY_TASK_ID}p" mapping_sorted_Lp.txt)
+R1=$(sed -n "${SLURM_ARRAY_TASK_ID}p" mapping_sorted_Lp.txt)                       ## change file name for Tp
 R2=$(echo ${R1} | sed "s/1.fastq.gz/2.fastq.gz/")
 sample=$(echo ${R1} | cut -d '/' -f 8 | cut -d '_' -f 1-3)
 outdir=$(echo ${R1} | cut -d '/' -f 7)
 mkdir -p "$outdir"
 mkdir -p logs
 
-refseq=/cluster/scratch/rouvenh/01_Data/kyuss.nextdenovo.juicer.fasta
+refseq=/cluster/scratch/rouvenh/01_Data/kyuss.nextdenovo.juicer.fasta              ## change reference genome
 
 # Map the reads to the reference and sort the BAM file
 # ${TMPDIR} is the directory created by Slurm to store temporary files.

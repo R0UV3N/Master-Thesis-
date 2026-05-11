@@ -6,7 +6,8 @@ Stacks v.2.68
 GNU Parallel 20210822 
     Tange, O. (2021, August 22). GNU Parallel 20210822 ('Kabul').
     Zenodo. https://doi.org/10.5281/zenodo.5233953
-
+bowtie2 2.5.5
+samtools 1.23.1
 ##################
 
 ############ add this to all .sh files
@@ -248,6 +249,77 @@ samtools sort -T ${TMPDIR}/${outdir}_${sample} --write-index -l 6 -@ 1 \
 myjobs -j `squeue --format='%A %i' | grep ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID} | cut -f1 -d ' '`
 ############################################
 
+
+
+
+
+(base) rouvenh@eu-login-26:~$ myjobs
+(base) rouvenh@eu-login-26:~$ cd $SCRATCH/02_Results/02_mapped_reads_bowtie/
+(base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ find /cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie/ -name "*.bam" > bam_list.txt
+(base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ less
+bam_list.txt                        mapping_sorted.txt                  R9582/                              runMapping_Tp_65811933.log
+logs/                               R9182/                              R9585/                              sorted_basepairs.txt
+mapping_sorted_Lp.txt               R9385/                              R9589/                              submit.mapping_bowtie2_Lp.slurm.sh
+mapping_sorted_Tp.txt               R9389/                              runMapping_Lp_65811931.log          submit.mapping_bowtie2_Tp.slurm.sh
+(base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ less R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam
+"R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam" may be a binary file.  See it anyway?
+(base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ conda activate mapping
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ samtools view R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam | less
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ samtools view -H R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam | less
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.mapping_bowtie2.slurm.sh
+dos2unix: submit.mapping_bowtie2.slurm.sh: No such file or directory
+dos2unix: Skipping submit.mapping_bowtie2.slurm.sh, not a regular file.
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.bamheaders.slurm.sh
+dos2unix: converting file submit.bamheaders.slurm.sh to Unix format...
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.bamheaders.slurm.sh
+Submitted batch job 66157374
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.flagstat.slurm.sh
+dos2unix: converting file submit.flagstat.slurm.sh to Unix format...
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.flagstat.slurm.sh
+Submitted batch job 66157560
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ ls -m bam_headers/*
+bam_headers/R9385_ALGI_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ALGI_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ALGI_3_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_ALGI_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ARTO_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ARTO_4_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_BRIS_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_BRIS_3_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_KOAL_1_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_KOAL_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SALA_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SALA_4_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_SORA_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORA_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORA_3_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_SORA_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORO_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORO_2_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_SORO_3_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORO_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_TRIV_1_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_TRIV_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_TRIV_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_VIDA_1_Lp_bowtie2_sorted_header.txt,
+bam_headers/R9385_VIDA_2_Lp_bowtie2_sorted_header.txt
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ ls bam_headers/* | wc -l
+25
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ ls bam_headers/* | wc -l
+25
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.coverage.slurm.sh
+dos2unix: converting file submit.coverage.slurm.sh to Unix format...
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.coverage.slurm.sh
+Submitted batch job 66159571
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ conda install bioconda::bcftools
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ cd ..
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results$ mkdir 03_variant_calling
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results$ cd 03_variant_calling/
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ mkdir Lp
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ mkdir Tp
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cut -f1 /cluster/scratch/rouvenh/01_Data/kyuss.nextdenovo.juicer.fasta.fai > /cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp/var_call_regions.txt
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cut -f1 /cluster/scratch/rouvenh/01_Data/HEN17_h1_yutang.fasta.fai > /cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp/var_call_regions.txt
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ wc -l Lp/var_call_regions.txt
+104 Lp/var_call_regions.txt
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ wc -l Tp/var_call_regions.txt
+1071 Tp/var_call_regions.txt
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cd Lp
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ dos2unix *.sh
+dos2unix: converting file submit.variant_calling_Lp.slurm.sh to Unix format...
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ sbatch < submit.variant_calling_Lp.slurm.sh
+Submitted batch job 66161749
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ cd ..
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cd Tp
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ dos2unix *.sh
+dos2unix: converting file submit.variant_calling_Tp.slurm.sh to Unix format...
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ sbatch < submit.variant_calling_Tp.slurm.sh
+sbatch: error: QOSMaxSubmitJobPerUserLimit
+sbatch: error: Batch job submission failed: Job violates accounting/QOS policy (job submit limit, user's size and/or time limits)
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ myjobs
 
 
 

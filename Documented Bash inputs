@@ -63,6 +63,7 @@ find *tar | parallel -j 5 'tar -xf {} --wildcards --no-anchored --strip-componen
 ## get info on the Job
 rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ myjobs
 
+
 ##Trying to use conda and setup
 rouvenh@eu-login-27:/cluster/scratch/rouvenh/01_Data$ cd $HOME
 rouvenh@eu-login-27:~$ conda
@@ -208,6 +209,7 @@ hts_LengthFilter -m 36 -L /dev/null \
 (mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ grep "Tp" mapping_sorted.txt > mapping_sorted_Tp.txt
 
 ####Add scripts to directory
+## Convert and submit scripts
 (mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix *.slurm.sh
 (mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.mapping_bowtie2_Lp.slurm.sh
 (mapping) rouvenh@eu-login-29:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.mapping_bowtie2_Tp.slurm.sh
@@ -250,76 +252,152 @@ myjobs -j `squeue --format='%A %i' | grep ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TA
 ############################################
 
 
-
-
-
-(base) rouvenh@eu-login-26:~$ myjobs
-(base) rouvenh@eu-login-26:~$ cd $SCRATCH/02_Results/02_mapped_reads_bowtie/
+## Generate list of bam files and start conda
 (base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ find /cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie/ -name "*.bam" > bam_list.txt
-(base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ less
-bam_list.txt                        mapping_sorted.txt                  R9582/                              runMapping_Tp_65811933.log
-logs/                               R9182/                              R9585/                              sorted_basepairs.txt
-mapping_sorted_Lp.txt               R9385/                              R9589/                              submit.mapping_bowtie2_Lp.slurm.sh
-mapping_sorted_Tp.txt               R9389/                              runMapping_Lp_65811931.log          submit.mapping_bowtie2_Tp.slurm.sh
-(base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ less R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam
-"R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam" may be a binary file.  See it anyway?
 (base) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ conda activate mapping
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ samtools view R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam | less
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ samtools view -H R9182/R9182_ARIS_1_Tp_bowtie2_sorted.bam | less
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.mapping_bowtie2.slurm.sh
-dos2unix: submit.mapping_bowtie2.slurm.sh: No such file or directory
-dos2unix: Skipping submit.mapping_bowtie2.slurm.sh, not a regular file.
+
+## Convert and submit script to extract bam headers
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.bamheaders.slurm.sh
-dos2unix: converting file submit.bamheaders.slurm.sh to Unix format...
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.bamheaders.slurm.sh
-Submitted batch job 66157374
+############################################ contents of submit.bamheaders.slurm.sh
+#!/bin/bash
+#SBATCH --job-name=bam_headers
+#SBATCH --output=bamHeaders_%A.log
+#SBATCH --error=bamHeaders_%A.log
+#SBATCH --open-mode=append
+#SBATCH --array=1-214
+#SBATCH --time=00:30:00
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=rouvenh@student.ethz.ch
+
+mkdir -p bam_headers
+
+bamfile=$(sed -n "${SLURM_ARRAY_TASK_ID}p" bam_list.txt)
+basename=$(basename "${bamfile%.bam}")
+outname="bam_headers/${basename}_header.txt"
+
+samtools view -H "$bamfile" > "$outname"
+############################################
+
+
+## Convert and submit script
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.flagstat.slurm.sh
-dos2unix: converting file submit.flagstat.slurm.sh to Unix format...
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.flagstat.slurm.sh
-Submitted batch job 66157560
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ ls -m bam_headers/*
-bam_headers/R9385_ALGI_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ALGI_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ALGI_3_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_ALGI_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ARTO_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_ARTO_4_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_BRIS_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_BRIS_3_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_KOAL_1_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_KOAL_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SALA_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SALA_4_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_SORA_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORA_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORA_3_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_SORA_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORO_1_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORO_2_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_SORO_3_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_SORO_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_TRIV_1_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_TRIV_2_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_TRIV_4_Lp_bowtie2_sorted_header.txt, bam_headers/R9385_VIDA_1_Lp_bowtie2_sorted_header.txt,
-bam_headers/R9385_VIDA_2_Lp_bowtie2_sorted_header.txt
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ ls bam_headers/* | wc -l
-25
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ ls bam_headers/* | wc -l
-25
+############################################contents of submit.flagstat.slurm.sh
+#!/bin/bash
+#SBATCH --job-name=flagstat
+#SBATCH --output=runFlagstat_%A.log
+#SBATCH --error=runFlagstat_%A.log
+#SBATCH --open-mode=append
+#SBATCH --array=1-214
+#SBATCH --time=01:00:00
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=rouvenh@student.ethz.ch
+
+mkdir -p flagstat_tmp
+
+bamfile=$(sed -n "${SLURM_ARRAY_TASK_ID}p" bam_list.txt)
+outname=$(basename "${bamfile%.bam}_flagstat.txt")
+
+echo "## SAMPLE: $bamfile" > flagstat_tmp/"$outname"
+samtools flagstat "$bamfile" >> flagstat_tmp/"$outname"
+echo "" >> flagstat_tmp/"$outname"
+############################################
+
+## Merge flagstat files
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ cat flagstat_tmp/*.txt > flagstat_summary.txt
+
+
+## Convert and submit script
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ dos2unix submit.coverage.slurm.sh
-dos2unix: converting file submit.coverage.slurm.sh to Unix format...
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ sbatch < submit.coverage.slurm.sh
-Submitted batch job 66159571
+############################################contents of submit.coverage.slurm.sh
+#!/bin/bash
+#SBATCH --job-name=coverage
+#SBATCH --output=runCoverage_%A.log
+#SBATCH --error=runCoverage_%A.log
+#SBATCH --open-mode=append
+#SBATCH --array=1-214
+#SBATCH --time=01:00:00
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=rouvenh@student.ethz.ch
+
+mkdir -p coverage_tmp
+
+bamfile=$(sed -n "${SLURM_ARRAY_TASK_ID}p" bam_list.txt)
+outname=$(basename "${bamfile%.bam}_coverage.txt")
+
+echo "## SAMPLE: $bamfile" > coverage_tmp/"$outname"
+samtools coverage "$bamfile" >> coverage_tmp/"$outname"
+echo "" >> coverage_tmp/"$outname"
+############################################
+
+## Merge coverage files
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ cat coverage_tmp/*.txt > coverage_summary.txt
+
+
+## Install bcftools into active conda environment "mapping"
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ conda install bioconda::bcftools
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ cd ..
+
+## Make new directories
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results$ mkdir 03_variant_calling
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results$ cd 03_variant_calling/
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ mkdir Lp
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ mkdir Tp
+
+## By region: runs 1 job/region to speed up process -> extract regions from fai-index (for both species) 
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cut -f1 /cluster/scratch/rouvenh/01_Data/kyuss.nextdenovo.juicer.fasta.fai > /cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp/var_call_regions.txt
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cut -f1 /cluster/scratch/rouvenh/01_Data/HEN17_h1_yutang.fasta.fai > /cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp/var_call_regions.txt
+## Count the regions
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ wc -l Lp/var_call_regions.txt
 104 Lp/var_call_regions.txt
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ wc -l Tp/var_call_regions.txt
 1071 Tp/var_call_regions.txt
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cd Lp
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ dos2unix *.sh
-dos2unix: converting file submit.variant_calling_Lp.slurm.sh to Unix format...
+
+## Convert and submit script
+(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ dos2unix submit.variant_calling_Lp.slurm.sh
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ sbatch < submit.variant_calling_Lp.slurm.sh
-Submitted batch job 66161749
+############################################contents of submit.variant_calling_Lp.slurm.sh
+#!/bin/bash
+#SBATCH --job-name=vcf_by_region_Lp                                                                                              ## change for Tp
+#SBATCH --time=120:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=8G
+#SBATCH --output=runVcf_by_region_Lp_%A.log                                                                                      ## change for Tp
+#SBATCH --error=runVcf_by_region_Lp_%A.log                                                                                       ## change for Tp
+#SBATCH --open-mode=append
+#SBATCH --array=1-104%48             ## 104 regions ## % to limit simultaneous array usage                                       ## change for Tp
+#SBATCH --tmp=100G
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=rouvenh@student.ethz.ch
+
+# Reference genome
+REF=/cluster/scratch/rouvenh/01_Data/kyuss.nextdenovo.juicer.fasta                                                               ## change for Tp
+
+# Output directory
+OUT_DIR=/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp/regions                                                        ## change for Tp
+mkdir -p $OUT_DIR
+
+# Get region
+REGION=$(sed -n "${SLURM_ARRAY_TASK_ID}p" var_call_regions.txt)
+
+# Find all BAM files and list them separated by space
+BAM_FILES=$(find /cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie -name "*Lp_bowtie2_sorted.bam" | tr '\n' ' ')        ## change for Tp
+
+# Variant calling by region
+bcftools mpileup -a "AD,ADF,ADR,DP,SP,INFO/AD,INFO/ADF,INFO/ADR" \
+  -f $REF -r $REGION $BAM_FILES | \
+bcftools call -mv -a GQ,GP -Ob -o $OUT_DIR/${REGION}.bcf
+
+myjobs -j `squeue --format='%A %i' | grep ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID} | cut -f1 -d ' '`
+############################################
+
+## Change directory and do it again for Tp with an updated .sh file
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ cd ..
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling$ cd Tp
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ dos2unix *.sh
-dos2unix: converting file submit.variant_calling_Tp.slurm.sh to Unix format...
 (mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ sbatch < submit.variant_calling_Tp.slurm.sh
-sbatch: error: QOSMaxSubmitJobPerUserLimit
-sbatch: error: Batch job submission failed: Job violates accounting/QOS policy (job submit limit, user's size and/or time limits)
-(mapping) rouvenh@eu-login-26:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ myjobs
+
 
 
 

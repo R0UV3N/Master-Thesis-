@@ -400,6 +400,49 @@ myjobs -j `squeue --format='%A %i' | grep ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TA
 
 
 
+(mapping) rouvenh@eu-login-11:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ cat flagstat_tmp/*.txt > flagstat_summary.txt
+(mapping) rouvenh@eu-login-11:/cluster/scratch/rouvenh/02_Results/02_mapped_reads_bowtie$ cat coverage_tmp/*.txt > coverage_summary.txt
+
+(mapping) rouvenh@eu-login-33:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ dos2unix submit.bcf_combine_filter_Lp.slurm.sh
+(mapping) rouvenh@eu-login-33:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Lp$ sbatch < submit.bcf_combine_filter_Lp.slurm.sh
+(mapping) rouvenh@eu-login-33:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ dos2unix submit.bcf_combine_filter_Tp.slurm.sh
+(mapping) rouvenh@eu-login-33:/cluster/scratch/rouvenh/02_Results/03_variant_calling/Tp$ sbatch < submit.bcf_combine_filter_Tp.slurm.sh
+############################################contents of submit.bcf_combine_filter_Lp.slurm.sh
+#!/bin/bash
+#SBATCH --job-name=combine_filter_bcf_Lp
+#SBATCH --time=1:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=5G
+#SBATCH --output=runCombine_filter_bcf_Lp_%j.log
+#SBATCH --error=runCombine_filter_bcf_Lp_%j.log
+#SBATCH --open-mode=append
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=rouvenh@student.ethz.ch
+
+# Paths
+pathRaw=ddRAD_var_call_all_Lp_raw.bcf
+# Adapt following output path corresponding to filter settings
+pathFilter=ddRAD_var_call_all_Lp_filtered_dp20.vcf.gz
+
+# Index bcfs
+for bcf in regions/*.bcf; do
+	bcftools index "$bcf"
+done
+
+# Combine regions
+# If script is used multiple times to assess different filter settings, comment following line after first use of the script
+bcftools concat -Ob -o $pathRaw regions/*.bcf
+
+# Uncomment to use bcf filters
+# bcftools filter --exclude 'QUAL<20' $pathRaw | \
+# bcftools view -v snps -m2 -M2 -q 0.01:minor -i 'MIN(FMT/DP)>5' -o $pathFilter
+
+# Filter
+#bcftools filter -Ou -S . -i 'FORMAT/DP[*]>=20' $pathRaw | \
+#bcftools +fill-tags -Ou | \
+#bcftools view -v snps --threads 12 -Oz9 -o $pathFilter
+myjobs -j $SLURM_JOB_ID
+############################################
 
 
 

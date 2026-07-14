@@ -2,10 +2,35 @@
 #### They are mostly in chronological order, but not exclusively, as this was also used as a reference guide.
 
 ##################Packets used
+tar (GNU tar) 1.34
+Copyright (C) 2021 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Written by John Gilmore and Jay Fenlason.
+
+slurm 25.05.5
+(base) rouvenh@eu-login-42:~$ parallel --version
+GNU parallel 20210822
+Copyright (C) 2007-2021 Ole Tange, http://ole.tange.dk and Free Software
+Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+GNU parallel comes with no warranty.
+
+GNU parallel 20210822
+Copyright (C) 2007-2021 Ole Tange, http://ole.tange.dk and Free Software
+Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+GNU parallel comes with no warranty.
+Web site: https://www.gnu.org/software/parallel
+When using programs that use GNU Parallel to process data for publication
+please cite as described in the manpage.
+
+
 Stacks v.2.68
-GNU Parallel 20210822 
-    Tange, O. (2021, August 22). GNU Parallel 20210822 ('Kabul').
-    Zenodo. https://doi.org/10.5281/zenodo.5233953
+
 bowtie2 2.5.5
 samtools 1.23.1
 ##################
@@ -578,6 +603,92 @@ dos2unix: converting file submit.variant_calling_Tp.slurm.sh to Unix format...
 
 
 
+
+
+
+
+# ======================================================================================================
+# ADMIXTURE
+# ======================================================================================================
+(base) rouvenh@eu-login-12:~$ conda activate mapping
+(mapping) rouvenh@eu-login-12:~$ conda install bioconda::plink
+(mapping) rouvenh@eu-login-12:~$ conda install bioconda::admixture
+(mapping) rouvenh@eu-login-12:~$ cd 01_admixture/
+(mapping) rouvenh@eu-login-12:~/01_admixture$ sbatch --time=1:00:00 --cpus-per-task=4 --mem-per-cpu=1G --wrap="bcftools index -f --threads 4 ddRAD_var_call_all_Lp_filte_QL30_maf001_DP30fpass95.vcf.gz"
+Submitted batch job 5638155
+(mapping) rouvenh@eu-login-12:~/01_admixture$ myjobs
+(mapping) rouvenh@eu-login-12:~/01_admixture$ bcftools query -l ddRAD_var_call_all_Lp_filtered_QL30_maf001_DP30fpass95.vcf.gz > Lp_sample_list.txt
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+(mapping) rouvenh@eu-login-12:~/01_admixture$ bcftools query -l ddRAD_var_call_all_Lp_filtered_QL30_maf001_DP30fpass95.vcf.gz 2> /dev/null
+R9385_BRIS_3_Lp
+R9385_SALA_2_Lp
+R9385_TRIV_1_Lp
+...
+R9585_AROL_3_Lp
+R9585_VD19_2_Lp
+(mapping) rouvenh@eu-login-12:~/01_admixture$ bcftools query -l ddRAD_var_call_all_Lp_filtered_QL30_maf001_DP30fpass95.vcf.gz 2> /dev/null > Lp_sample_list.txt
+(mapping) rouvenh@eu-login-12:~/01_admixture$ bcftools query -l ddRAD_var_call_all_Tp_filtered_QL30_maf001_DP30fpass95.vcf.gz 2> /dev/null > Tp_sample_list.txt
+(mapping) rouvenh@eu-login-12:~/01_admixture$ dos2unix Lp_samples_keep.txt
+dos2unix: converting file Lp_samples_keep.txt to Unix format...
+(mapping) rouvenh@eu-login-12:~/01_admixture$ sbatch --time=1:00:00 --cpus-per-task=4 --mem-per-cpu=1G --wrap="bcftools reheader ddRAD_var_call_all_Lp_filtered_QL30_maf_DP30fpass95.vcf.gz --samples Lp_samples_keep.txt --threads 4 -o ddRAD_renamed.bcf"
+Submitted batch job 5645398
+(mapping) rouvenh@eu-login-12:~/01_admixture$ sbatch --time=1:00:00 --cpus-per-task=4 --mem-per-cpu=1G --wrap="bcftools query -l ddRAD_renamed.bcf | awk '/_remove$/' > ples_to_drop.txt"
+Submitted batch job 5645456
+(mapping) rouvenh@eu-login-12:~/01_admixture$ sbatch --time=1:00:00 --cpus-per-task=4 --mem-per-cpu=1G --wrap="bcftools view ddRAD_renamed.bcf -S ^samples_to_drop.txt -reads 4 -Ob -o ddRAD_renamed_removed.bcf"
+Submitted batch job 5645521
+(mapping) rouvenh@eu-login-12:~/01_admixture$ bcftools stats ddRAD_renamed_removed.bcf > ddRAD_renamed_removed_stats.txt
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv ddRAD_renamed_removed.bcf ./Lp/ddRAD_Lp_renamed_removed.bcf
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv ddRAD_Lp_renamed.bcf ./Lp/ddRAD_Lp_renamed.bcf
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv slurm-5638155.out ./Lp/
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv *.out ./Lp/
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv ddRAD_renamed_removed_stats.txt ./Lp/ddRAD_Lp_renamed_removed_stats.txt
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv samples_to_drop.txt ./Lp/Lp_samples_to_drop.txt
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv ddRAD_var_call_all_Lp_filtered_QL30_maf001_DP30fpass95.vcf.gz ./Lp/
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv Lp_samples_keep.txt ./Lp/
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv ddRAD_var_call_all_Lp_filtered_QL30_maf001_DP30fpass95.vcf.gz.csi ./Lp/
+(mapping) rouvenh@eu-login-12:~/01_admixture$ mv ddRAD_var_call_all_Tp_filtered_QL30_maf001_DP30fpass95.vcf.gz ./Tp/
+(mapping) rouvenh@eu-login-12:~/01_admixture$ cd Lp
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ dos2unix Lp_admix_group_insitu.txt
+dos2unix: converting file Lp_admix_group_insitu.txt to Unix format...
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ dos2unix admixture_groups.sh
+dos2unix: converting file admixture_groups.sh to Unix format...
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ sh admixture_groups.sh ddRAD_Lp_renamed_removed.bcf Lp_admix_group_insitu.txt insitu/insitu.bcf
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ dos2unix *.txt
+dos2unix: converting file ddRAD_Lp_renamed_removed_stats.txt to Unix format...
+dos2unix: converting file Lp_admix_group_fulldata.txt to Unix format...
+dos2unix: converting file Lp_admix_group_insitu_swicul.txt to Unix format...
+dos2unix: converting file Lp_admix_group_insitu.txt to Unix format...
+dos2unix: converting file Lp_admix_group_swicul.txt to Unix format...
+dos2unix: converting file Lp_samples_keep.txt to Unix format...
+dos2unix: converting file Lp_samples_to_drop.txt to Unix format...
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ sh admixture_groups.sh ddRAD_Lp_renamed_removed.bcf Lp_admix_group_swicul.txt swicul/swicul.bcf
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ sh admixture_groups.sh ddRAD_Lp_renamed_removed.bcf Lp_admix_group_insitu_swicul.txt insitu_swicul/insitu_swicul.bcf
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ sh admixture_groups.sh ddRAD_Lp_renamed_removed.bcf Lp_admix_group_fulldata.txt fulldata/fulldata.bcf
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+[W::bcf_hdr_check_sanity] MQ should be declared as Type=Float
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ dos2unix *.sh
+dos2unix: converting file admixture_groups_Lp.plink.sh to Unix format...
+dos2unix: converting file admixture_groups.sh to Unix format...
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ sh admixture_groups.plink.sh
+sh: 0: cannot open admixture_groups.plink.sh: No such file
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ sh admixture_groups_Lp.plink.sh
+PLINK v1.9.0-b.8 64-bit (22 Oct 2024)              cog-genomics.org/plink/1.9/
+(C) 2005-2024 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to insitu/insitu.log.
+
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ mkdir logs
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ dos2unix submit.admixture_Lp_insitu.sh
+dos2unix: converting file submit.admixture_Lp_insitu.sh to Unix format...
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ sbatch < submit.admixture_Lp_insitu.sh
+Submitted batch job 5656256
+(mapping) rouvenh@eu-login-12:~/01_admixture/Lp$ myjobs
 
 
 
